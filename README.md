@@ -1,33 +1,46 @@
-# Waveshare ESP32-S3 AMOLED 1.43" – PlatformIO
+# Waveshare ESP32-S3 AMOLED 1.43"
 
-Project using the Waveshare round AMOLED 1.43” display
+Project using the Waveshare round AMOLED 1.43” display.
 
-Product information: https://www.waveshare.com/esp32-s3-touch-amoled-1.43.htm
+- Product information: https://www.waveshare.com/esp32-s3-touch-amoled-1.43.htm
+- Waveshare wiki: https://www.waveshare.com/wiki/ESP32-S3-Touch-AMOLED-1.43
 
-https://www.waveshare.com/wiki/ESP32-S3-Touch-AMOLED-1.43
+## LVGL example code
 
-Waveshare examples using LVGL: https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.43C
+I haven't used LVGL before so I'm collecting a list of pages with examples to work through to see what works for me!
 
-https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.43C/tree/main/02_Example/arduino_v3.3.0/06_LVGL_V9_Test
+- Waveshare examples using LVGL: https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.43C
+- LVGL/Platformio Documentation: https://registry.platformio.org/libraries/lvgl/lvgl
+- https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.43C/tree/main/02_Example/arduino_v3.3.0/06_LVGL_V9_Test
+- Audio test, might be able to use boot button as a button??  https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.43C/tree/main/02_Example/arduino_v3.3.0/04_Audio_Test
+- https://github.com/beniseman/PIO-Waveshare-ESP32-S3-1.43-Amoled-Touch
+- https://github.com/market-viewer/firmware
+- https://www.instructables.com/Design-Watch-Face-With-LVGL/
+- https://github.com/fbiego/esp32-c3-mini
 
-Audio test, might be able to use boot button as a button??  https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.43C/tree/main/02_Example/arduino_v3.3.0/04_Audio_Test
+## Project Goals
 
-See: https://github.com/beniseman/PIO-Waveshare-ESP32-S3-1.43-Amoled-Touch
+This project will use **PlatformIO** toolset for development and **LVGL** for the graphics.
 
-LVGL/Platformio Documentation: https://registry.platformio.org/libraries/lvgl/lvgl
-
-
-This project provides a **minimal, working PlatformIO setup** for the **Waveshare ESP32-S3 1.43" AMOLED Touch Display**.
-
-The goal of this repository is **not** to demonstrate features or applications, but simply to:
-
+The goal of this repository is to demonstrate features or applications:
 - Bring the board up cleanly in **PlatformIO**
 - Initialize the AMOLED display (SH8601 / CO5300)
 - Enable **LVGL (v9.x)** rendering
 - Enable **FT3168 capacitive touch**
+- Enable **buttons** for user actions
 - Serve as a stable foundation for future projects
 
----
+Display ideas:
+- Aircraft tracker/radar
+- Home solar information
+- ISS location
+- Home Bindicator information
+- Local/Other Weather
+- Planet locations (space)
+- Nice clock
+- Customisation (brightness, colours etc.)
+
+
 
 ## Hardware
 
@@ -36,7 +49,7 @@ The goal of this repository is **not** to demonstrate features or applications, 
 - **Touch Controller:** FT3168
 - **Interface:** QSPI (display), I²C (touch)
 
----
+
 
 ## Software Stack
 
@@ -44,8 +57,4 @@ The goal of this repository is **not** to demonstrate features or applications, 
 - **Arduino framework (ESP32-S3)**
 - **LVGL 9.x**
 - **Waveshare-provided BSP + drivers**
-
-This project intentionally uses the **Waveshare driver and LVGL files directly**, rather than relying on external LVGL display libraries, to avoid artifacts and timing issues.
-
----
 
