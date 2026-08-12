@@ -46,6 +46,7 @@ static const sh8601_lcd_init_cmd_t lcd_init_cmds[] = {
   { 0x29, (uint8_t[]){ 0x00 }, 0, 0 },
 };
 
+
 void bsp_lcd_init(void) {
   int ret = ESP_OK;
   spi_bus_config_t buscfg = {};

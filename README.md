@@ -18,6 +18,12 @@ I haven't used LVGL before so I'm collecting a list of pages with examples to wo
 - https://www.instructables.com/Design-Watch-Face-With-LVGL/
 - https://github.com/fbiego/esp32-c3-mini
 
+Other examples yet to research.
+- https://github.com/fasaiph/esp32-gallery/tree/main
+- https://github.com/kytos22/esp32-s3-civic-boost-gauge/tree/main
+- https://github.com/ON6PH/capsule-radar-1.43/tree/main
+- https://github.com/nikthefix/Waveshare_Support_1.43inch_Round_Amoled_Touch_Display_LVGL/tree/main/1_43inch_amoled_waveshare
+
 ## Project Goals
 
 This project will use **PlatformIO** toolset for development and **LVGL** for the graphics.
