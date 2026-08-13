@@ -24,6 +24,10 @@ Other examples yet to research.
 - https://github.com/ON6PH/capsule-radar-1.43/tree/main
 - https://github.com/nikthefix/Waveshare_Support_1.43inch_Round_Amoled_Touch_Display_LVGL/tree/main/1_43inch_amoled_waveshare
 
+Arduino Projects
+https://github.com/thelastoutpostworkshop/waveshare_esp32s3_1.43_amoled_xwing_game (works :-))
+https://github.com/thelastoutpostworkshop/waveshare_esp32s3_1.43_amoled_lvgl9 (display works but doesn't move)
+
 ## Project Goals
 
 This project will use **PlatformIO** toolset for development and **LVGL** for the graphics.
