@@ -2,24 +2,6 @@
 
 
 /*
-Notes from nikthefix 
-
-This build uses a lean SH8601 display driver rather than the Waveshare Espressif driver and support files.
-The driver files are supplied in the sketch directory so no installation is required.
-The touch driver is also included in the sketch directory so no installation is required.
-I recommend a clean LVGL install via the Arduino library manager and perhaps a clean lv_conf.h with the following modifications:
-
-Please set in lv_conf.h:  --->   #if 1                                  (line 15)
-                          --->   #define LV_COLOR_16_SWAP 1             (line 30) _swap not available
-                          --->   #define LV_MEM_CUSTOM 1                (line 49) not available
-                          --->   #define LV_TICK_CUSTOM 1               (line 88) not available
-                          --->   #define LV_FONT_MONTSERRAT_14 1        (line 367)
-
-                          A copy of my lv_conf.h file is provided.
-
-Set display brightness in setup() ---> lcd_brightness(200); // 0-255
-Set display orientation in setup() ---> disp_drv.sw_rotate = 1;  disp_drv.rotated = LV_DISP_ROT_XXX; (Options: LV_DISP_ROT_90, LV_DISP_ROT_180, LV_DISP_ROT_270)
-
 Build options:
     Select board ESP32S3 Dev Module
     Select USB CDC On Boot "Enabled"
@@ -30,59 +12,117 @@ Build options:
 
 
 #include <Arduino.h>
-#include "esp32_s3_touch_amoled_1.43c.h"
-#include "lvgl.h"
-#include "externLib/esp_lcd_sh8601.h"
 #include "pins_config.h"
 
-#define BACKLIGHT_EN 1
+#include <Arduino_GFX_Library.h>
+#include <ESP32Time.h>
+#include <TFT_eSPI.h>
 
-// My added code
+#include <Wire.h>
+//#include "XPowersLib.h"
+#include "bigFont.h"
+#include "middleFont.h"
+#include "smallFont.h"
+#include "valueFont.h"
 
-#define ENABLE_RENDER_DIAGNOSTICS 0
-
-#if ENABLE_RENDER_DIAGNOSTICS
-void lvgl_log_print(const char *message)
-{
-    Serial.print("[lvgl] ");
-    Serial.print(message);
-}
-
-uint32_t count_non_black_pixels(const lv_color_t *frame)
-{
-    if (frame == nullptr) return 0;
-
-    const lv_color_t black = lv_color_black();
-    uint32_t count = 0;
-    for (uint32_t i = 0; i < LCD_WIDTH * LCD_HEIGHT; ++i) {
-        if (frame[i].full != black.full) ++count;
-    }
-    return count;
-}
-
-void print_frame_diagnostics(const char *stage)
-{
-    Serial.printf(
-        "[render] %s: static=%lu, composited=%lu, flushes=%lu, pixels=%lu, free_psram=%lu\n",
-        stage,
-        (unsigned long)count_non_black_pixels(static_frame),
-        (unsigned long)count_non_black_pixels(composited_frame),
-        (unsigned long)diagnostic_flush_count,
-        (unsigned long)diagnostic_flush_pixels,
-        (unsigned long)ESP.getFreePsram());
-}
-#endif
+//#include "ft3168.h"
 
 
-// End of my added code!
+void draw(void);
+
+double rad=0.01745;
+
+float x[360]; //outer point
+float y[360];
+float px[360]; //ineer point
+float py[360];
+float lx[360]; //long line 
+float ly[360];
+float shx[360]; //short line 
+float shy[360];
+float tx[360]; //text
+float ty[360];
+
+int PPgraph[20]={0};
+
+int angle=0;
+int value=0;
+int chosenFont;
+int chosenColor;
+int r=118;
+int sx=-2;
+int sy=120;
+int inc=18;
+int a=0;
+int prev=0;
+String secs="00";
+int second1=0;
+int second2=0;
+
+int deb=0;
+int deb2=0;
+int fase=0; //stoped
+bool playing=0;
+
+// Used only to create sprite for GFX library to draw
+TFT_eSPI tft = TFT_eSPI();
+TFT_eSprite sprite = TFT_eSprite(&tft);
+
+// Replace with own time routines
+ESP32Time rtc(0); 
+
+// ==== LCD PINS ====
+#define LCD_SDIO0 11    // From pins_config.h - works :-)
+#define LCD_SDIO1 12
+#define LCD_SDIO2 13
+#define LCD_SDIO3 14
+#define LCD_SCLK  10
+#define LCD_RESET 21
+#define LCD_CS    9
+
+#define LCD_WIDTH  466
+#define LCD_HEIGHT 466
+
+// ==== TOUCH (I2C) ====
+#define IIC_SDA 47  // pins_config and bsp_config
+#define IIC_SCL 48
+#define FT3168_I2C_ADDRESS 0x38
 
 
+// ==== DISPLAY BUS ====
+Arduino_DataBus *bus = new Arduino_ESP32QSPI(
+  LCD_CS, 
+  LCD_SCLK, 
+  LCD_SDIO0, 
+  LCD_SDIO1,
+  LCD_SDIO2, 
+  LCD_SDIO3
+);
 
-static void my_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * px_map)
-{
-    /*Write px_map to the area->x1, area->x2, area->y1, area->y2 area of the
-     *frame buffer or external display controller. */
-}
+// ==== DISPLAY DRIVER ====
+Arduino_CO5300 *gfx = new Arduino_CO5300(
+  bus, 
+  LCD_RESET, 
+  0,              // rotation
+  LCD_WIDTH, 
+  LCD_HEIGHT, 
+  6, 0, 0, 0
+);
+
+
+int n=0;
+int xt = 0, yt = 0;
+
+
+#define BUTTON 0
+
+unsigned short grays[13];
+#define red  0xD041
+#define blue 0x0105
+#define bck TFT_BLACK
+char dd[7]={'r','u','n','t','i','m','e'};
+
+
 
 void setup() {
     Serial.begin(115200);
@@ -107,58 +147,214 @@ void setup() {
         MAC:                a4:cb:8f:d6:96:d8
     */
 
-
-    Serial.printf("lvgl-example run\n");
-    /*Initialize the display*/
-    pinMode(LCD_VCI_EN, OUTPUT);
-    digitalWrite(LCD_VCI_EN, HIGH);
-
-
-     bsp_broolesia_display_init();
-
-// #if ENABLE_RENDER_DIAGNOSTICS
-//     lv_log_register_print_cb(lvgl_log_print);
-// #endif  
-
-    if (bsp_display_lock(-1) == ESP_OK) {
-        //lv_demo_widgets();
-        Serial.printf("Display init ok\n");
-
-        lv_obj_t * screen = lv_screen_active();
-        lv_obj_set_style_bg_color(screen, lv_color_hex(0x003a57), 0);
-        lv_obj_set_style_text_color(screen, lv_color_hex(0xffffff), 0);
-
-        lv_obj_t * label = lv_label_create(screen);
-        lv_obj_set_align(label, LV_ALIGN_CENTER);
-        lv_label_set_text(label, "Hello world");
-
-        bsp_display_unlock();
+    pinMode(BUTTON, INPUT_PULLUP); 
+    rtc.setTime(0,0,0,10,23,2026,0); 
+    sprite.createSprite(400,240);
+    
+    if (!gfx->begin()) {
+        Serial.println("Display Init Failed!");
     }
 
+    gfx->setBrightness(140);
+    gfx->fillScreen(RGB565_TEAL);
+    delay(2000);
+    gfx->fillScreen(RGB565_BLACK);
+
+    // Touch screen init
+    Wire.begin(IIC_SDA, IIC_SCL);
+    Wire.beginTransmission(FT3168_I2C_ADDRESS);
+    Wire.write(0x02); // Touch points status register
+    Wire.endTransmission(false);
+    
+    int co = 220;
+    for(int i = 0; i < 13; i++)
+    {
+        grays[i]=tft.color565(co, co, co);
+        co=co-20;
+    }
+
+    for(int i = 0; i < 360; i++)
+    {
+        x[i]=(r*cos(rad*i))+sx;
+        y[i]=(r*sin(rad*i))+sy;
+        px[i]=((r-5)*cos(rad*i))+sx;
+        py[i]=((r-5)*sin(rad*i))+sy;
+
+        lx[i]=((r-24)*cos(rad*i))+sx;
+        ly[i]=((r-24)*sin(rad*i))+sy;
+
+        shx[i]=((r-12)*cos(rad*i))+sx;
+        shy[i]=((r-12)*sin(rad*i))+sy;
+
+        tx[i]=((r+28)*cos(rad*i))+sx;
+        ty[i]=((r+28)*sin(rad*i))+sy;
+    }
+
+    for (int i=0;i<20;i++)
+        PPgraph[i]=random(1,12);
+
+    draw();
+
+    Serial.println("Ready...");
 }
 
-int8_t brightness = 100;
 
 void loop() {
-#if (BACKLIGHT_EN)
-    if (brightness < 0) {
-        brightness = 100;
+    angle++;
+    if (angle>356)
+        angle=0;
+
+    for (int i=0;i<20;i++)
+        PPgraph[i]=random(1,12);
+
+    if (digitalRead(BUTTON)==0) {
+        if (deb==0) {
+            deb=1; 
+            fase++;
+            if (fase==1) {
+                playing=1;
+                rtc.setTime(0,0,0,10,23,2026,0);
+            }
+
+            if (fase==2)
+                playing=0;
+
+            if (fase==3) {
+                fase=0;
+            }
+  
+            draw();
+        }
+    } else 
+        deb=0;
+ 
+    second1=rtc.getSecond();
+
+    if (second1!=second2) {
+        second2=second1;
+        prev++;
+    
+        if(prev>6)
+            prev=0;
     }
 
-    if (bsp_display_lock(-1) == ESP_OK) {
-        bsp_display_brightness_set(brightness);
-        bsp_display_unlock();
+    if (playing)
+        draw();  
+
+    // Read touch screen
+    Wire.requestFrom(FT3168_I2C_ADDRESS, 5);
+    if (Wire.available() >= 5) {
+        uint8_t touch_points = Wire.read() & 0x0F;
+        uint8_t high_x = Wire.read();
+        uint8_t low_x = Wire.read();
+        uint8_t high_y = Wire.read();
+        uint8_t low_y = Wire.read();
+
+        if (touch_points > 0) {
+            int x = ((high_x & 0x0F) << 8) | low_x;
+            int y = ((high_y & 0x0F) << 8) | low_y;
+            Serial.printf("Touch detected! X: %d, Y: %d\n", x, y);
+        }
     }
+}
 
-    vTaskDelay(pdMS_TO_TICKS(2000));
-    brightness -= 25;
-#endif
+void draw(void) {
 
-    static long last_time = millis();
+  sprite.fillSprite(0);
+  sprite.fillRect(54,120,24,4,TFT_RED);
 
-    if (millis() - last_time > 5) {
-        last_time = millis();
-        lv_timer_handler(); // Call lvgl's timer handler
-        lv_tick_inc(5);     // Update lvgl's tick
-    }
+    for(int j=0;j<20;j++)
+    for(int i=0;i<PPgraph[j];i++)
+    sprite.fillRect(190+(j*6),90-(i*4),4,3,grays[6]);
+  
+  sprite.fillRect(180,136,120,3,grays[8]);
+  sprite.fillRect(186,130,3,34,grays[8]);
+  sprite.fillRect(136,0,40,135,blue);
+  sprite.fillRect(136,224,40,16,blue);
+
+  sprite.fillCircle(372,76,28,blue);
+
+ 
+  sprite.drawArc(372,76,24,10,0,angle,0x130F,blue);
+
+  sprite.setTextDatum(8);
+  sprite.loadFont(smallFont);
+  sprite.setTextColor(grays[7],bck);
+  sprite.drawString("AMOLED",342,124);
+  sprite.drawString("*HRS*",178,218);
+  sprite.unloadFont();
+
+   sprite.loadFont(midleFont);
+
+   for(int i=0;i<120;i++)
+ {
+   a=angle+(i*3);
+   if(a>359)
+   a=(angle+(i*3))-360;
+   
+   sprite.drawPixel(x[a],y[a],grays[6]);
+
+   if(i%3==0)
+   sprite.drawWedgeLine(x[a],y[a],x[a]-6,y[a],1,2,grays[5],bck);
+
+   if(i%6==0)
+   sprite.drawWedgeLine(x[a],y[a],x[a]-18,y[a],2,3,grays[4],bck);
+   if(i%12==0){
+   sprite.drawWedgeLine(x[a],y[a],x[a]-30,y[a],2,4,grays[3],bck);
+   }
+
+}
+    
+  sprite.setTextDatum(4);
+  sprite.setTextColor(grays[2],grays[9]);
+  
+  for(int i=0;i<7;i++)
+  {
+    sprite.fillSmoothRoundRect(186+(i*30),2,26,26,3,grays[9],bck);
+    sprite.drawString(String(dd[i]),186+((i+1)*30)-17,16);
+  }
+  sprite.unloadFont();
+
+
+  sprite.drawWedgeLine(199+(prev*30),35,199+(prev*30),40,1,3,grays[3],bck); ////////////
+  sprite.setTextDatum(0);
+  sprite.setTextColor(grays[1],bck);
+  sprite.loadFont(bigFont);
+  if(fase==0)
+  sprite.drawString("00:00",196,150);
+  else
+  sprite.drawString(rtc.getTime().substring(3,8),196,150);
+  sprite.unloadFont();
+
+  sprite.setTextDatum(0);
+  sprite.setTextColor(grays[4],bck);
+  sprite.loadFont(midleFont);
+  sprite.drawString("BADGER",190,104);  ////////////////////////date hard coded
+  sprite.setTextDatum(4);
+  sprite.fillRect(0,145,50,30,grays[10]);
+  sprite.setTextColor(grays[3],grays[10]);
+  sprite.drawString("mil",25,162); 
+   
+  sprite.unloadFont();
+
+
+  sprite.setTextDatum(4);
+  sprite.setTextColor(grays[2],bck);
+  sprite.loadFont(valueFont);
+  if(fase==0)
+  sprite.drawString("00",24,124);
+  else
+  sprite.drawString(String(rtc.getMillis()/10),24,124);
+  sprite.setTextColor(grays[4],bck);
+     if(fase==0)
+     sprite.drawString("00",154,174);
+   else
+   sprite.drawString(rtc.getTime().substring(0,2),154,174);   /// /////////////////////////////////seconds
+  sprite.unloadFont();
+
+  sprite.setTextColor(grays[8],bck);
+  sprite.drawString("CAN YOU READ THIS",346,128);
+
+  
+  gfx->draw16bitBeRGBBitmap(40,120,(uint16_t*)sprite.getPointer(),400,240);
 }

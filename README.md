@@ -23,10 +23,15 @@ Other examples yet to research.
 - https://github.com/kytos22/esp32-s3-civic-boost-gauge/tree/main
 - https://github.com/ON6PH/capsule-radar-1.43/tree/main
 - https://github.com/nikthefix/Waveshare_Support_1.43inch_Round_Amoled_Touch_Display_LVGL/tree/main/1_43inch_amoled_waveshare
+https://github.com/cyllas/hud-for-883
+- https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.8/blob/main/examples/arduino/examples/07_GFX_Clock/07_GFX_Clock.ino
 
 Arduino Projects
 https://github.com/thelastoutpostworkshop/waveshare_esp32s3_1.43_amoled_xwing_game (works :-))
 https://github.com/thelastoutpostworkshop/waveshare_esp32s3_1.43_amoled_lvgl9 (display works but doesn't move)
+
+ESP-IDF Projects
+https://github.com/fasaiph/esp32-gallery
 
 ## Project Goals
 
