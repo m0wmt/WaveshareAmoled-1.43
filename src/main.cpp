@@ -162,9 +162,6 @@ void setup() {
 
     // Touch screen init
     Wire.begin(IIC_SDA, IIC_SCL);
-    Wire.beginTransmission(FT3168_I2C_ADDRESS);
-    Wire.write(0x02); // Touch points status register
-    Wire.endTransmission(false);
     
     int co = 220;
     for(int i = 0; i < 13; i++)
@@ -242,6 +239,9 @@ void loop() {
         draw();  
 
     // Read touch screen
+    Wire.beginTransmission(FT3168_I2C_ADDRESS);
+    Wire.write(0x02); // Touch points status register
+    Wire.endTransmission(false);
     Wire.requestFrom(FT3168_I2C_ADDRESS, 5);
     if (Wire.available() >= 5) {
         uint8_t touch_points = Wire.read() & 0x0F;
@@ -253,7 +253,7 @@ void loop() {
         if (touch_points > 0) {
             int x = ((high_x & 0x0F) << 8) | low_x;
             int y = ((high_y & 0x0F) << 8) | low_y;
-            Serial.printf("Touch detected! X: %d, Y: %d\n", x, y);
+            Serial.printf("Touch (%d) detected! X: %d, Y: %d\n", touch_points, x, y);
         }
     }
 }
