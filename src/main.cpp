@@ -26,7 +26,8 @@ Build options:
 #include "valueFont.h"
 
 //#include "ft3168.h"
-
+#include "driver/i2c.h"
+#include "esp_err.h"
 
 void draw(void);
 
@@ -130,10 +131,11 @@ void setup() {
 
     Serial.println("\n##################################");
     Serial.println(F("ESP32 Information:"));
-    Serial.printf("Internal Total Heap %d, Internal Used Heap %d, Internal Free Heap %d\n", ESP.getHeapSize(),
-    ESP.getHeapSize()-ESP.getFreeHeap(), ESP.getFreeHeap()); Serial.printf("Sketch Size %d, Free Sketch Space %d\n",
-    ESP.getSketchSize(), ESP.getFreeSketchSpace()); Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n",
-    ESP.getPsramSize(), ESP.getFreePsram()); Serial.printf("Chip Model %s, ChipRevision %d, Cpu Freq %d, SDK Version %s\n", ESP.getChipModel(), ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion()); 
+    Serial.printf("Core Version %s, SDK Version %s\n", ESP.getCoreVersion(), ESP.getSdkVersion());
+    Serial.printf("Internal Total Heap %d, Internal Used Heap %d, Internal Free Heap %d\n", ESP.getHeapSize(), ESP.getHeapSize()-ESP.getFreeHeap(), ESP.getFreeHeap()); 
+    Serial.printf("Sketch Size %d, Free Sketch Space %d\n", ESP.getSketchSize(), ESP.getFreeSketchSpace()); 
+    Serial.printf("SPIRam Total heap %d, SPIRam Free Heap %d\n", ESP.getPsramSize(), ESP.getFreePsram()); 
+    Serial.printf("Chip Model %s, ChipRevision %d, Cpu Freq %d, SDK Version %s\n", ESP.getChipModel(), ESP.getChipRevision(), ESP.getCpuFreqMHz(), ESP.getSdkVersion()); 
     Serial.printf("Flash Size %d, Flash Speed %d\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed());
     Serial.println("##################################\n");
 
@@ -162,7 +164,8 @@ void setup() {
 
     // Touch screen init
     Wire.begin(IIC_SDA, IIC_SCL);
-    
+
+
     int co = 220;
     for(int i = 0; i < 13; i++)
     {
@@ -241,7 +244,7 @@ void loop() {
     // Read touch screen
     Wire.beginTransmission(FT3168_I2C_ADDRESS);
     Wire.write(0x02); // Touch points status register
-    Wire.endTransmission(false);
+    Wire.endTransmission(false);    
     Wire.requestFrom(FT3168_I2C_ADDRESS, 5);
     if (Wire.available() >= 5) {
         uint8_t touch_points = Wire.read() & 0x0F;
