@@ -73,3 +73,8 @@ Display ideas:
 - **LVGL 9.x**
 - **Waveshare-provided BSP + drivers**
 
+## Pictures
+
+![Board Connections - High Level](./docs/board_connections.png)
+
+![Board Explanation](./docs/display_back.png)
