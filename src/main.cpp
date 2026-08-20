@@ -163,7 +163,8 @@ void setup() {
     gfx->fillScreen(RGB565_BLACK);
 
     // Touch screen init
-    Wire.begin(IIC_SDA, IIC_SCL);
+    Wire.setPins(IIC_SDA, IIC_SCL);
+    Wire.begin();
 
 
     int co = 220;
